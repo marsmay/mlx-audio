@@ -14,7 +14,7 @@ Apple Silicon 本地语音合成 (TTS) 与转写 (STT) 工具集，基于 [MLX](
 |------|------|
 | **硬件** | Apple Silicon Mac (M1 / M2 / M3 / M4) |
 | **系统** | macOS 13+ (Ventura 及以上) |
-| **Python** | 3.11+（系统自带 Python 3.9 会报类型错误） |
+| **Python** | 3.11+（macOS 自带 `/usr/bin/python3` 为 3.9，需 `brew install python@3.14` 安装新版） |
 | **内存** | 8 GB 起步（推荐 16 GB+，详见[硬件参考](#硬件资源参考)） |
 | **磁盘** | 首次运行自动下载模型，约 1-4 GB/模型 |
 | **网络** | 仅首次下载模型需要，后续完全离线 |

@@ -27,7 +27,9 @@ Apple MLX-based local speech synthesis and transcription, supporting Qwen3-TTS a
 ## Requirements
 
 - Apple Silicon Mac (M1/M2/M3/M4)
-- Python 3.11+（系统自带 Python 3.9 会报 `TypeError: unsupported operand type(s) for |`，需使用 Homebrew Python）
+- Python 3.11+
+  - macOS 自带的 `/usr/bin/python3` 是 3.9，不满足要求
+  - 安装方式：`brew install python@3.14`（装完后 `python3 --version` 应 ≥ 3.11）
 - Dependencies:
   ```bash
   pip install mlx-audio soundfile numpy
@@ -368,7 +370,7 @@ output/
 | Subtitle timestamps off | Use `--word-timestamps` for word-level alignment |
 | Audio format not supported | Convert: `ffmpeg -i input.mp3 -ar 16000 -ac 1 output.wav` |
 | Out of memory | Close other apps, use smaller models |
-| `TypeError: unsupported operand type(s) for |` | Python version too old — use `~/Homebrew/bin/python3` (3.14) instead of system python3 (3.9) |
+| `TypeError: unsupported operand type(s) for |` | 终端 `python3 --version` 低于 3.11 — 运行 `brew install python@3.14` 安装新版 |
 | `ModuleNotFoundError: No module named 'soundfile'/'sounddevice'` | Extra deps not bundled — install: `pip install soundfile sounddevice` |
 
 ---

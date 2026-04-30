@@ -17,8 +17,6 @@ from pathlib import Path
 os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
 os.environ.setdefault("HF_HUB_ENABLE_OFFLINE", "1")
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from mlx_audio.stt import load
 from mlx_audio.stt.models.whisper.writers import get_writer
 
@@ -45,18 +43,6 @@ def transcribe(args):
     model = load(model_id)
 
     print(f"[*] Input audio: {args.audio}")
-    print(f"[*] Word timestamps: {args.word_timestamps}")
-
-    # Execute transcription
-    result = model.generate(
-        args.audio,
-        language=args.language,
-        word_timestamps=args.word_timestamps,
-        task="transcribe" if not args.translate else "translate"
-    )
-
-    # Convert to dict for writers
-    result_dict = stt_output_to_dict(result)
 
     # Streaming output
     if args.stream:
@@ -71,6 +57,19 @@ def transcribe(args):
             print(f"{marker} {chunk.text}", end="", flush=True)
         print()
         return
+
+    print(f"[*] Word timestamps: {args.word_timestamps}")
+
+    # Execute transcription
+    result = model.generate(
+        args.audio,
+        language=args.language,
+        word_timestamps=args.word_timestamps,
+        task="transcribe" if not args.translate else "translate"
+    )
+
+    # Convert to dict for writers
+    result_dict = stt_output_to_dict(result)
 
     # Export subtitles if format specified
     if args.format:
@@ -140,11 +139,7 @@ def word_timestamps(args):
 
     # Export to JSON
     if args.json:
-        output = {
-            "text": result.text,
-            "segments": result.segments,
-            "language": result.language,
-        }
+        output = stt_output_to_dict(result)
         json_path = Path(args.json)
         json_path.parent.mkdir(parents=True, exist_ok=True)
         with open(json_path, "w", encoding="utf-8") as f:

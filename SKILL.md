@@ -16,8 +16,8 @@ triggers:
   - "SRT subtitle"
   - "VTT subtitle"
   - "offline voice synthesis"
-  - "speech to text"
   - "subtitle generation"
+  - "batch dubbing"
 ---
 
 # MLX-Audio: Local TTS & STT
@@ -27,18 +27,11 @@ Apple MLX-based local speech synthesis and transcription, supporting Qwen3-TTS a
 ## Requirements
 
 - Apple Silicon Mac (M1/M2/M3/M4)
-- Python 3.9+ (macOS system python3 is 3.9 or 3.10+)
+- Python 3.11+（系统自带 Python 3.9 会报 `TypeError: unsupported operand type(s) for |`，需使用 Homebrew Python）
 - Dependencies:
   ```bash
-  pip install mlx-audio soundfile sounddevice
+  pip install mlx-audio soundfile numpy
   brew install ffmpeg
-  ```
-
-**⚠️ Python 3.9 Compatibility**: If you get `TypeError: unsupported operand type(s) for |:`, your macOS python3 version is too old. Use Homebrew python3 3.14+ instead:
-  ```bash
-  brew install python@3.14
-  # Then reinstall mlx-audio with the new python:
-  pip install mlx-audio --force-reinstall
   ```
 
 ## TTS: Qwen3-TTS Speech Synthesis
@@ -98,6 +91,8 @@ generate_audio(
     temperature=0.7,
     output_path="./",
     file_prefix="output",
+    join_audio=True,
+    play=False,
 )
 ```
 
@@ -108,7 +103,7 @@ from mlx_audio.tts.generate import generate_audio
 
 generate_audio(
     text="Hello from Sesame.",
-    model="mlx-community/Qwen3-TTS-12Hz-0.6B-CustomVoice-bf16",
+    model="mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-bf16",
     voice="Serena",
     instruct="warm and friendly",
     lang_code="en",
@@ -116,6 +111,8 @@ generate_audio(
     speed=1.0,
     output_path="./",
     file_prefix="output",
+    join_audio=True,
+    play=False,
 )
 ```
 
@@ -131,6 +128,8 @@ generate_audio(
     speed=1.0,
     output_path="./",
     file_prefix="output",
+    join_audio=True,
+    play=False,
 )
 ```
 
@@ -147,7 +146,7 @@ for chunk in model.generate(text="Long text...", stream=True):
 
 ```bash
 # Voice Clone
-python scripts/run_tts.py voice-clone \
+python3 scripts/run_tts.py voice-clone \
   --text "The truth is always one" \
   --ref_audio reference.wav \
   --ref_text "Reference transcript" \
@@ -155,7 +154,7 @@ python scripts/run_tts.py voice-clone \
   --output output.wav
 
 # Preset Voice
-python scripts/run_tts.py custom-voice \
+python3 scripts/run_tts.py custom-voice \
   --text "The truth is always one" \
   --voice Ryan \
   --language English \
@@ -165,7 +164,7 @@ python scripts/run_tts.py custom-voice \
   --output output.wav
 
 # Voice Design
-python scripts/run_tts.py voice-design \
+python3 scripts/run_tts.py voice-design \
   --text "Welcome to our podcast" \
   --instruct "professional female news anchor" \
   --language English \
@@ -224,21 +223,28 @@ from mlx_audio.stt.models.whisper.writers import get_writer
 model = load("mlx-community/whisper-large-v3-turbo-asr-fp16")
 result = model.generate("audio.wav", word_timestamps=True)
 
+# Convert to dict for writers
+result_dict = {
+    "text": result.text,
+    "segments": result.segments,
+    "language": result.language,
+}
+
 # Export SRT subtitles
 writer = get_writer("srt", output_dir="./output/")
-writer(result, "subtitle")
+writer(result_dict, "subtitle")
 
 # Export VTT (Web compatible)
 writer = get_writer("vtt", output_dir="./output/")
-writer(result, "subtitle")
+writer(result_dict, "subtitle")
 
 # Export plain text
 writer = get_writer("txt", output_dir="./output/")
-writer(result, "transcript")
+writer(result_dict, "transcript")
 
 # Export JSON (full metadata)
 writer = get_writer("json", output_dir="./output/")
-writer(result, "metadata")
+writer(result_dict, "metadata")
 ```
 
 #### 5. Language Specification
@@ -267,34 +273,77 @@ for text in model.generate_streaming(
 ### STT CLI
 
 ```bash
-# Basic transcription
-python scripts/run_stt.py transcribe \
+# Basic transcription (save to file)
+python3 scripts/run_stt.py transcribe \
   --audio input.wav \
-  --output transcript.txt
+  --save transcript.txt
 
 # Generate SRT subtitles
-python scripts/run_stt.py transcribe \
+python3 scripts/run_stt.py transcribe \
   --audio input.wav \
   --format srt \
   --output subtitles/
 
 # Generate VTT subtitles
-python scripts/run_stt.py transcribe \
+python3 scripts/run_stt.py transcribe \
   --audio input.wav \
   --format vtt \
   --output subtitles/
 
 # Specify language
-python scripts/run_stt.py transcribe \
+python3 scripts/run_stt.py transcribe \
   --audio input.wav \
   --language zh \
   --format json \
   --output metadata/
 
 # Word timestamps
-python scripts/run_stt.py word-timestamps \
+python3 scripts/run_stt.py word-timestamps \
   --audio input.wav \
   --json timeline.json
+```
+
+---
+
+## Batch Dubbing
+
+Multi-segment TTS with speaker switching and automatic merging.
+
+### Input Config (JSON)
+
+```json
+{
+  "model": "custom-voice",
+  "voice": "Serena",
+  "instruct": "warm and friendly",
+  "language": "auto",
+  "temperature": 0.7,
+  "segments": [
+    {"id": 1, "text": "First segment.", "speaker": "Serena"},
+    {"id": 2, "text": "Second segment.", "speaker": "Ryan"}
+  ]
+}
+```
+
+### CLI
+
+```bash
+python3 scripts/batch_dubbing.py --config dubbing.json --output ./output/
+
+# Custom silence gaps
+python3 scripts/batch_dubbing.py --config dubbing.json --output ./output/ \
+  --silence-gap 0.5 --character-switch-gap 0.8
+```
+
+### Output
+
+```
+output/
+├── individual/
+│   ├── segment_0001.wav
+│   └── segment_0002.wav
+├── combined.wav          # Merged audio with silence gaps
+└── manifest.json         # Processing summary
 ```
 
 ---

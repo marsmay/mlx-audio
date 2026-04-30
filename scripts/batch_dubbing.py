@@ -32,7 +32,6 @@ import argparse
 import json
 import os
 import sys
-import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -219,34 +218,26 @@ def main():
         seg_id = segment.get("id", i)
         text = segment.get("text", "")
         speaker = segment.get("speaker", voice)
-        speakers.append(speaker)
 
         print(f"[*] 合成片段 {seg_id}: {text[:50]}...")
 
-        # 在临时目录生成
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-            tmp_path = tmp.name
-
+        segment_path = individual_dir / f"segment_{seg_id:04d}.wav"
         success = synthesize_segment(
             text=text,
             voice=speaker,
             language=language.lower() if language != "auto" else "auto",
             instruct=instruct,
             model=model_id,
-            output_path=tmp_path,
+            output_path=str(segment_path),
             temperature=temperature,
         )
 
         if success:
-            # 复制到 individual 目录
-            segment_path = individual_dir / f"segment_{seg_id:04d}.wav"
-            Path(tmp_path).replace(segment_path)
             segment_files.append((seg_id, str(segment_path)))
+            speakers.append(speaker)
             print(f"    -> 保存: {segment_path}")
         else:
             print(f"    [!] 跳过片段 {seg_id}")
-            # 删除临时文件
-            Path(tmp_path).unlink(missing_ok=True)
 
     # 合并音频 (按 ID 排序)
     if segment_files:

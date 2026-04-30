@@ -1,5 +1,7 @@
 # MLX-Audio
 
+**Agent Skill** — 适用于 [Claude Code](https://claude.ai/code)、[Codex](https://openai.com/codex)、[OpenClaw](https://github.com/openclaw/openclaw)、[Hermes](https://github.com/NousResearch/Hermes) 等支持 Skill 协议的 AI Agent。
+
 Apple Silicon 本地语音合成 (TTS) 与转写 (STT) 工具集，基于 [MLX](https://github.com/ml-explore/mlx) 框架，使用 [Qwen3-TTS](https://huggingface.co/collections/mlx-community/qwen3-tts-67f7e0c5e06c3f5e8e2c5b3a) 和 [Whisper](https://huggingface.co/mlx-community/whisper-large-v3-turbo-asr-fp16) 模型。完全离线运行，无需网络连接。
 
 ## 功能
@@ -272,4 +274,6 @@ French  German  Italian  Spanish  Portuguese  Russian
 
 ## 许可
 
-本项目仅供学习和个人使用。模型权重遵循各自的原作者许可协议。
+[MIT License](./LICENSE)
+
+模型权重遵循各自原作者的许可协议（Qwen3-TTS: Apache 2.0, Whisper: MIT）。

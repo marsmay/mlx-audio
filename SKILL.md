@@ -22,6 +22,8 @@ triggers:
 
 # MLX-Audio: Local TTS & STT
 
+**Agent Skill** — Compatible with [Claude Code](https://claude.ai/code), [Codex](https://openai.com/codex), [OpenClaw](https://github.com/openclaw/openclaw), [Hermes](https://github.com/NousResearch/Hermes), and other Skill-protocol-compatible AI agents.
+
 Apple MLX-based local speech synthesis and transcription, supporting Qwen3-TTS and Whisper models.
 
 ## Requirements
